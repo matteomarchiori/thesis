@@ -1,0 +1,17 @@
+\chapter{State of the art\label{sec:art}}
+A good overview comparison of Paxos, Zab and Raft is ``Consensus in the Cloud: Paxos Systems Demystified'' \cite{ailijiang2016consensus}.
+It gives some history about the algorithms and the major platforms which use them to solve problems such as leader election.
+
+The first paper about Paxos is ``The Part-Time Parliament'' \cite{leslie1998part}, where Lamport tries to describe it by using a story of the Greek parliament of Paxos. It has not been understood, so the author presented a simplified description of the protocol in ``Paxos Made Simple'' \cite{lamport2001paxos}.
+
+Zab has been firstly described in ``A simple totally ordered broadcast protocol
+'' \cite{reed2008simple}, with more formal specifications in ``Zab: High-performance broadcast for primary-backup systems'' \cite{junqueira2011zab}.
+Here there are phases of the protocol and proofs of correctness.
+
+Another description of the protocol with a practical analysis from the ZooKeeper implementation of 2012 can be found in ``ZooKeeper's atomic broadcast protocol: Theory and practice'' \cite{medeiros2012zookeeper}.
+
+ZooKeeper system is discussed in ``ZooKeeper: Wait-free coordination for Internet-scale systems'' \cite{hunt2010zookeeper}, where Zab is implemented.
+
+``In Search of an Understandable Consensus Algorithm (Extended Version)'' \cite{ongaro2014search} describes the Raft protocol and the reasons of its design.
+
+Finally ``Paxos vs Raft: Have we reached consensus on distributed consensus?'' \cite{howard2020paxos} is a more detailed comparison of Paxos and Raft algorithms.

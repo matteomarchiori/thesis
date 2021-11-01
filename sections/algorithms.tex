@@ -1,0 +1,190 @@
+\chapter{Paxos, Zab and Raft\label{sec:algorithms}}
+
+In this section there is a description about the three algorithms for the distributed consensus, in chronological order, the focus is on how they work and on some properties they present.
+
+\section{Paxos\label{sec:paxos}}
+
+The Paxos algorithm from J. Lamport is a protocol used to obtain the consensus among a cluster of nodes connected through an unreliable network on one value.
+This is the reason why the algorithm is used to solve the distributed consensus problem by replicating a state machine over multiple nodes.
+The consensus on the value is obtained using a majority of votes, so a quorum of participants agrees on one value by voting it.
+All of the nodes are equal and there is no leader as in Zab and Raft protocols.
+
+In the basic version Paxos is designed to choose a single value, while in Multi-Paxos multiple values are chosen to build a log.
+
+In basic Paxos the following properties are guaranteed:
+\begin{itemize}
+    \item only a single value is chosen;
+    \item servers learn a value only if chosen by a majority.
+\end{itemize}
+
+Other properties wanted but not guaranteed (liveness properties) are:
+\begin{itemize}
+    \item some value will be chosen;
+    \item the chosen value will be learn by the learners.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/paxos1}
+    \caption{Paxos steps}
+    \label{fig:paxos}
+\end{figure}
+
+The actors of the protocol are the following:
+\begin{description}
+    \item[Proposers] active entities, they propose values and handle client requests.
+    \item[Acceptors] passive entities, their responses represent votes and store the chosen value.
+    \item[Learners] passive entities, they learn the chosen value.  
+\end{description}
+
+Messages in Paxos are lexical ordered because they include a proposal ID. This is necessary to understand which become first in logical order.
+
+Paxos messages are the following:
+\begin{description}
+    \item[Prepare] request from proposers, needs to be accepted from a majority of acceptors to make a proposal. It includes the proposal ID and a value.
+    \item[Granted] response to the permission request. It includes the proposal ID, the last accepted proposal ID and the last accepted value if any.
+    \item[Proposal] from proposers after majority of granted from acceptors. It includes the proposal ID and the proposed value.
+    \item[Accept] sent from acceptors if the proposal is accepted.
+\end{description}
+
+How does the algorithm ensure a distributed consensus?
+\begin{enumerate}
+    \item Proposers need to gain permission from a quorum in order to make a suggestion;
+    \item Proposers need to gain acceptance of the suggestion from the quorum.
+\end{enumerate}
+
+Because proposal ID are lexical ordered it is enough to increase them if there are conflicts.
+A prepare request is granted from an acceptor if and only if its proposal ID is higher or equal to any previously granted proposal ID.
+
+At this point proposer before making a propose inspect the granted message, and it set the value to the highest between the prepare value and the received one.
+
+Then the proposal request is accepted from an acceptor if and only if its proposal ID is higher or equal to any previously accepted proposal ID.
+
+Here an example of how the algorithm works:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/paxos2}
+    \caption{Paxos example}
+    \label{fig:paxosexample}
+\end{figure}
+
+In this example (figure~\vref{fig:paxosexample}) Proposer A send a Prepare request with proposal ID $1$ and value $1$. It is accepted from Acceptor X and Acceptor Y, but not from Acceptor Z, because it first receive another Prepare request from Proposer B with an higher proposal ID $2$ and value $3$.
+At this point Proposer A send a Propose with proposal ID $1$ and value $1$, but it is not accepted because acceptors received the Prepare request from B.
+Proposer B sends a Propose with proposal ID $2$ and value $3$, and it is learned because at least two of the three acceptors accepted it.
+
+Multi-Paxos is used to determine multiple values, where each index value of a log entry uses an independent basic Paxos instance.
+
+The presence of multiple proposers in Paxos can lead to livelock. To solve this problem some implementation select a leader to have only one proposer each time.
+
+\section{Zab\label{sec:zab}}
+
+ZooKeeper Atomic Broadcast protocol has been developed as part of ZooKeeper platform, which provides services for scalability of distributed applications.
+While Paxos is a generic algorithm described in a more flexible way, Zab is implemented inside ZooKeeper and is highly bounded to it.
+
+As reported in the wiki of the Apache website, ``The main conceptual difference between Zab and Paxos is that it is primarily designed for primary-backup systems, like Zookeeper, rather than for state machine replication.''
+
+In practice while in a state machine replication the order of uncommitted changes that overlap in time is not important, it becomes important that order is preserved in primary-backup systems, where replicas agree on incremental state updates.
+
+The protocol presents the following guarantees:
+\begin{description}
+    \item[Integrity] transaction with zxid $Z$ received needs to be broadcasted from someone;
+    \item[Total order] if zxid $Z$ was delivered before $Z^{'}$, then any other process needs to deliver $Z$ before $Z^{'}$;
+    \item[Agreement] if two transaction overlap, they must be ordered, or one must be chosen.
+\end{description}
+
+To ensure that messages are ordered, Zab is based on FIFO channels for communications, on TCP protocol, which is totally ordered.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/zab1}
+    \caption{Zab steps}
+    \label{fig:zab}
+\end{figure}
+
+\clearpage
+
+Actors in Zab protocol are:
+\begin{description}
+    \item[Leader] elected to maintain an up-to-date history of transactions and avoid conflicts;
+    \item[Follower] follower of the leader;
+    \item[Candidate] follower candidate to become leader. 
+\end{description}
+
+Transactions in Zab are identified by a zxid, which is made from an epoch part (time counter for leader election) and from a counter (incremented after a valid transaction).
+
+Zab is composed of three phases, each one comparable to a two phase commit:
+\begin{description}
+    \item[Discovery] in this phase leader and how much data is missing is determined;
+    \item[Synchronization] servers are synchronized to remove missing data;
+    \item[Broadcast] here transactions are transmitted.   
+\end{description}
+
+In the discovery phase the leader and followers decide which server contains the true history of the transactions which have occurred until the present time.
+A prospective leader is chosen first using a simple leader election algorithm. Each follower sends the last proposed epoch to the prospective leader.
+The leader gets last accepted epoch from a quorum of followers and sends a new epoch, which is greater than all the epochs it has received.
+If the new epoch is greater than last proposed epoch, followers update their proposed epoch and send their last acknowledged epoch along with their last zxid to the leader.
+The leader selects the history of the follower with the highest zxid and the highest epoch as the truth.
+
+In the synchronization phase the history of transactions is synced across all the followers.
+The prospective leader proposes itself as the new leader since it has the highest zxid and epoch.
+If the follower's last accepted proposal has the same epoch as the new leader, it sets its current epoch as the same, sends ACK to the leader, and starts accepting all the missing transactions through a DIFF call.
+Upon receiving the ACK from a quorum of followers, the leader sends a commit message and delivers all the missing transactions to the followers.
+
+This phase prevents causal conflicts. It guarantees that all processes in the quorum deliver transactions of prior epochs before transactions of the new epoch are proposed.
+
+The broadcast phase occurs after a quorum of servers has decided a leader, appended the missing data, and is ready to accept new transactions.
+Leader proposes a transaction with zxid higher than all previous ids.
+Followers accept the proposed transaction from the leader and append it to their history. An ACK messaged is sent once the transaction is written to durable storage.
+If the leader received ACK from a quorum of followers for the transaction, then it sends a commit message.
+Followers on receiving a commit message broadcast the transactions among each other.
+
+Each server in ZooKeeper executes one iteration of this protocol at a time. In case of an exception, such as epoch not matching with the leader, the servers can start a new iteration beginning from the first phase.
+
+\section{Raft\label{sec:raft}}
+
+The primary goal of Raft is to be easy to understand, compared to previous distributed consensus algorithms.
+The aim of researchers who worked on that was to describe a simpler algorithm than Paxos and to give an implementation of it, not only formal proofs of correctness.
+Consensus is reached through proper log replication, which allows to have replicated state machines, which execute the same sequence of commands.
+
+The main property of this algorithm is the leader completeness: when a message is committed each future leader will have it stored on its log.
+
+As in Zab, Raft use the leader-followers approach.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/raft1}
+    \caption{Raft steps}
+    \label{fig:raft}
+\end{figure}
+
+A node can be:
+\begin{description}
+    \item[Leader] replicates the log, sends heartbeats. If it discovers an higher term it becomes a follower.
+    \item[Follower] passive, wait the heartbeats.
+    \item[Candidate] issues requests for vote.   
+\end{description}
+
+\clearpage
+
+Raft can be divided into two phases:
+\begin{description}
+    \item[Leader election] one server is elected as a leader, if it crashes another leader will be chosen;
+    \item[Log replication] the leader accepts commands from clients and appends them to the log. Then it replicates the log to the followers and fix the inconsistencies. 
+\end{description}
+
+Raft uses terms instead of epochs, and they represent the same concept, so they are used to determine how much a node is up-to-date. As in Zab there could be at most one leader per term, and some terms could have no leader. Each node maintains its current term value, and a node becomes leader only if voted from a quorum of nodes.
+
+During elections the node increment its current term, then change to candidate state, vote for itself and requests to all other servers.
+Then it retries until a majority votes for it or it receives an heartbeat from valid leader. If a timeout occurs then it tries again.
+    
+The leader is chosen on log completeness, so the most recent term identifies the most complete log.    
+Each entry of the log has a position index, a term and a command. If an entry is present in the majority of logs in the same position, with the same term and the same command, it is committed.
+
+During normal operations clients send commands to the leader (if they are connected to a follower it will send the command to the leader). Leader append the command to the log and broadcast it to the followers. When the command is executed and response is returned to the client, then it is committed.
+
+To solve log inconsistencies such as missing or wrong entries the leader keeps the next index for each follower. If an inconsistent entry is found, the next index decrement, until a consistent entry is found or it becomes $0$. At this point the log can be restored from the leader's one.
+
+Terms are used as epochs in Zab to avoid an out-of-date leader. If a leader receive a response from a follower with an higher term, then it reverts to follower state and updates its term.
+
+One disadvantage of the Zab protocol is that data exchange is required between the leader and the followers during the recovery phase.

@@ -1,0 +1,34 @@
+\chapter{Self-assessment\label{sec:assessment}}
+
+\section{Critique of exam work\label{sec:critique}}
+In this section are discussed achievements and failures in the PoC realization and in the obtained results.
+
+\subsection{Achievements\label{sec:achievements}}
+The PoC shows that it is possible to implement a basic Zab on the top of ZooKeeper in order to coordinate nodes, at least for leader election.
+It is enough to demonstrate that some described steps of the algorithm work, but not enough to constitute a full Zab replication.
+
+\subsection{Failures\label{sec:failures}}
+The demo does not show the complete Zab protocol in action but only the part used for leader election.
+Another failure concerns ZooKeeper because the Curator platform adoption is necessary to avoid some common mistakes which are easy to find by using basic ZooKeeper constructs.
+
+Least but not last the work misses a deep under the hood analysis of Zab inside ZooKeeper as planned.
+A good analysis had been done in \cite{medeiros2012zookeeper}, however it is dated 2012.
+Some reported features are still valid, all of the classes involved in the Zab implementation are under the quorum package (\href{https://zookeeper.apache.org/doc/r3.6.2/apidocs/zookeeper-server/org/apache/zookeeper/server/quorum/package-frame.html}{\texttt{quorum package documentation}}).
+
+What the documentation miss is an higher level overview of the implemented protocol and of its improvements, something to map the original Zab protocol as explained in the paper with the up-to-date ZooKeeper implementation of Zab.
+
+\clearpage
+
+\section{Learning outcomes\label{sec:outcomes}}
+
+The exam and the resulting PoC bring the following learning outcomes:
+\begin{itemize}
+    \item theoretical study of Paxos, Zab and Raft;
+    \item partial Zab implementation in Java;
+    \item practice with ZooKeeper and Curator;
+    \item use of some constructs seen during lessons for concurrency management in Java.
+\end{itemize}
+
+Such work is not a real distributed system but more a concurrent one which acts as a distributed one.
+However the simulation is enough to get a basic overview about Zab algorithm and to test ZooKeeper in a standalone mode.
+It should also be possible to configure more ZooKeeper nodes to form a cluster of servers which will be used to coordinate more clients which synchronize themselves as Zab servers.

@@ -1,0 +1,40 @@
+\documentclass[10pt,
+    a4paper,
+    twoside,
+    openright,
+    titlepage,
+    headinclude,
+    footinclude,
+    abstracton,
+    numbers=noenddot,
+    cleardoublepage=empty]{scrbook}
+\usepackage{lmodern}
+\usepackage{textcomp}
+\usepackage{lettrine}
+\usepackage{calligra}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[autostyle,italian=guillemets]{csquotes}
+\usepackage[backref,hyperref,style=numeric,autolang=hyphen,backend=biber]{biblatex}
+\addbibresource{bibliography.bib}
+\usepackage[eulerchapternumbers,beramono,pdfspacing, tocaligned, dottedtoc]{classicthesis}
+\usepackage{arsclassica}
+\usepackage[suftesi]{frontespizio}
+\usepackage{float}
+\usepackage{hyperref}
+\newcommand{\mail}[1]{\href{mailto:#1}{\texttt{#1}}}
+\hypersetup{linktocpage=false,
+    linktocpage=false, pdfstartpage=3, pdfstartview=FitV, pdfborder={0 0 0}}
+\linespread{1.5}
+%\hypersetup{hidelinks}
+\newcommand{\omissis}{[\textellipsis\unkern]}
+\usepackage{verbatim}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{tabularx}\newcolumntype{Y}{>{\centering\arraybackslash}X}
+\usepackage{longtable}
+\usepackage[english]{varioref}
+\usepackage{minted}
+\usemintedstyle{lovelace}
+%\usepackage{color,soulutf8}

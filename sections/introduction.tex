@@ -1,0 +1,14 @@
+\chapter{Introduction\label{sec:introduction}}
+Distributed consensus is used in distributed systems for different goals, such as get a copy of the system state on multiple machines to achieve failures tolerance, so that if a part of the distributed system becomes unavailable the application is not affected.
+The three algorithms for distributed systems treated in this work are Paxos, Zab and Raft.
+
+Paxos is described in \cite{leslie1998part}, with a ``simplified'' version here \cite{lamport2001paxos}. 
+It is the first in order of appearance in time, and it has been described as complex to understand in the original paper (\href{http://lamport.azurewebsites.net/pubs/pubs.html#lamport-paxos}{\texttt{The Writings of Leslie Lamport}}), and in its basic version it misses some features which Zab and Raft claim to have (\href{https://cwiki.apache.org/confluence/display/ZOOKEEPER/Zab+vs.+Paxos}{\texttt{Zab vs.~Paxos}}). Distributed systems are also called Paxos systems because algorithms for distributed consensus are inspired to the Paxos one.
+
+Zab is described in \cite{reed2008simple}, with more formal proofs here \cite{junqueira2011zab}, second in order of appearance. As the name says it is an atomic broadcast protocol, so it replicates transactions in the same order on every part of the distributed application.
+
+Raft is described in \cite{ongaro2014search}, third in order of appearance. It has been designed with the goal to obtain a more understandable distributed consensus algorithm.
+
+In this work there is a reproduction of the Zab algorithm. The reason is that it is used inside ZooKeeper to manage the distributed consensus, and the goal of the proof of concept is to understand how Zab is used.
+
+The remaining parts of this report are an overview of the state of the art (section~\vref{sec:art}) where there are useful resources, a description of the three algorithms (section~\vref{sec:algorithms}), the problem statement (section~\vref{sec:problem}) with details about scope, purpose and aspects investigated through the proof of concept, a section with details about the work product (section~\vref{sec:work}) (technical choices, design of experiments and conceived results), finally a critique of the exam work and a discussion of the learning outcomes (section~\vref{sec:assessment}).

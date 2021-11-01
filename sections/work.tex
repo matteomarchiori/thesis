@@ -1,0 +1,259 @@
+\chapter{Work product\label{sec:work}}
+
+\section{Technical choices\label{sec:technical}}
+In order to satisfy the required aspects the PoC is developed using Java, the object oriented programming language used to build ZooKeeper, which provides an API to use the znodes.
+The PoC is made of a system of ZooKeeper clients which acts as a cluster of Zab servers, sending and receiving messages through the znodes.
+An high view scheme of the architecture is the following one:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/project}
+    \caption{High view scheme}
+    \label{fig:scheme}
+\end{figure}
+
+\section{Details about implementation\label{sec:details}}
+
+The PoC includes only one part of the protocol as described in the paper, which is bounded to leader election in case of leader failure. The part of the system which interacts with the clients won't be implemented.
+
+The system is composed by:
+\begin{itemize}
+    \item the message package, with all of the classes used to represent messages as described in the Zab paper \cite{junqueira2011zab};
+    \item the configuration package, with some values shared among the system for configuration purposes, such as the ZooKeeper connection;
+    \item the main package with the Peer class, where steps of the Zab algorithm are described.
+\end{itemize}
+
+As described in introduction (section~\vref{sec:introduction}), ZooKeeper has been used as the underlying system to connect the nodes.
+This means that there is no need to have an heartbeat timer to know if the leader is alive, because the whole cluster will be notified by watchers if this node crashes.
+
+The source code of the project can be found on GitHub \cite{matteo_marchiori_2021_4679620}.
+
+\subsection{ZooKeeper\label{sec:zookeeper}}
+ZooKeeper is a service to manage distributed applications.
+It provides ways to implement queues, locks, leader election mechanisms and more.
+
+It is structured in znodes, which have a structure similar to the tree used to represent filesystems.
+It is possible to create, read, update and delete znodes, and to watch events on them.
+
+For example each client can use a different znode to interact with the system, or it is possible to use a single znode to exchange messages, depending on the wanted behavior.
+
+ZooKeeper provides a detailed documentation about is structure and some recipes to realize the most used functionalities in a distributed system.
+
+In this project ZooKeeper to manage message exchanges among clients, which represent peers in a Zab simulation.
+Each client has a single associated ephemeral znode, and can send and receive messages from other znodes in the same cluster by watching its znode.
+
+\subsection{Watchers\label{sec:watchers}}
+Watchers are the objects used in ZooKeeper to check events on znodes.
+Events are usually CRUD operations on znodes, or connection events.
+They are one time trigger and need to be reattached after an event on the watched znode happened.
+
+\subsection{Curator\label{sec:curator}}
+Curator is, as the \href{https://curator.apache.org/getting-started.html}{\texttt{documentation states}}, a ``ZooKeeper keeper''.
+Sometimes using ZooKeeper can be difficult and may drive to undesired results.
+
+It provides simplified APIs, other recipes and a more elegant way to write code by using Fluent style (\href{https://en.wikipedia.org/wiki/Fluent_interface}{\texttt{Fluent interface}}).
+
+In this project Curator has been used to get a more reliable and understandable way to get change events on znodes, by using cache listeners instead of watchers, which can be seen as watchers with a permanent connection to the linked znode.
+
+\subsection{Locks\label{sec:locks}}
+Distributed locks are used in ZooKeeper to prevent weird access to znodes from clients.
+For example it is possible to build a mutex to avoid that multiple clients write in the same znode in the same time.
+
+In this simulation distributed locks have been used to avoid concurrent writing events on a znode.
+
+\section{Design of the evaluation experiments\label{sec:evaluation}}
+
+The PoC must prove the understanding of how Zab works and that it is possible to use in practice such algorithm for leader election and other distributed consensus operations.
+The experiments to check this are the following:
+\begin{enumerate}
+    \item Check what happens with one peer connected;
+    \item Check how the algorithm behave with more peers connected;
+    \item Check what happen when the leader crashes;
+\end{enumerate}
+
+It must be noticed that this is not the natural way to use ZooKeeper, nor to elect a leader among multiple clients (\href{https://curator.apache.org/curator-recipes/leader-election.html}{\texttt{Leader Election Recipe}}). However this PoC is made to give a demonstration of the Zab behavior when the leader is gone away, not to test ZooKeeper as if used in a production system.
+
+\clearpage
+
+\section{Results of the evaluation experiments\label{sec:results}}
+
+Results of the deigned experiments are reported in the following sections.
+
+\subsection{One peer system\label{sec:one}}
+
+\begin{minted}{shell-session}
+2021-04-08 23:04:07.886 Creating new peer.
+2021-04-08 23:04:07.948 First peer connected.
+2021-04-08 23:04:07.990 Create node on zookeeper...
+2021-04-08 23:04:07.999 Hello, I'm c_0000000002
+2021-04-08 23:04:08.067 Elect leader...
+2021-04-08 23:04:08.076 I'm the prospective leader.
+2021-04-08 23:04:08.078 Phase 3: broadcast (leader)
+2021-04-08 23:04:08.079 Wait Message...
+\end{minted}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/experiment1}
+    \caption{Experiment 1}
+    \label{fig:experiment1}
+\end{figure}
+
+When there is only one node in the cluster, it is useless to apply Zab. It directly goes to the broadcast phase of the protocol.
+
+
+\subsection{More peers connected\label{sec:more}}
+
+\begin{minted}{shell-session}
+2021-04-08 23:04:47.588 Creating new peer.
+2021-04-08 23:04:47.644 Create node on zookeeper...
+2021-04-08 23:04:47.683 Hello, I'm c_0000000003
+2021-04-08 23:04:47.745 Elect leader...
+2021-04-08 23:04:47.751 I'm the prospective leader.
+2021-04-08 23:04:47.752 Phase 3: broadcast (leader)
+2021-04-08 23:04:47.754 Wait Message...
+2021-04-08 23:04:54.700 FOLLOWERINFO received from c_0000000004
+2021-04-08 23:04:54.702 Send NEWEPOCH to c_0000000004
+2021-04-08 23:04:54.826 Send NEWLEADER to c_0000000004
+2021-04-08 23:04:54.973 ACKNEWLEADER received from c_0000000004
+2021-04-08 23:04:54.975 Send COMMITLEADER to c_0000000004
+2021-04-08 23:05:08.910 FOLLOWERINFO received from c_0000000005
+2021-04-08 23:05:08.910 Send NEWEPOCH to c_0000000005
+2021-04-08 23:05:09.047 Send NEWLEADER to c_0000000005
+2021-04-08 23:05:09.223 ACKNEWLEADER received from c_0000000005
+2021-04-08 23:05:09.224 Send COMMITLEADER to c_0000000005
+2021-04-08 23:05:10.706 FOLLOWERINFO received from c_0000000006
+2021-04-08 23:05:10.706 Send NEWEPOCH to c_0000000006
+2021-04-08 23:05:10.866 Send NEWLEADER to c_0000000006
+2021-04-08 23:05:11.052 ACKNEWLEADER received from c_0000000006
+2021-04-08 23:05:11.053 Send COMMITLEADER to c_0000000006
+
+2021-04-08 23:04:54.225 Creating new peer.
+2021-04-08 23:04:54.288 Create node on zookeeper...
+2021-04-08 23:04:54.348 Hello, I'm c_0000000004
+2021-04-08 23:04:54.438 Elect leader...
+2021-04-08 23:04:54.445 I'm a follower.
+2021-04-08 23:04:54.447 Phase 1: discovery (follower)
+2021-04-08 23:04:54.452 Send FOLLOWERINFO to c_0000000003
+2021-04-08 23:04:54.553 Wait NEWEPOCH...
+2021-04-08 23:04:54.885 NEWLEADER received from c_0000000003
+2021-04-08 23:04:54.887 Send ACKNEWLEADER to c_0000000003
+2021-04-08 23:04:54.941 Wait COMMITLEADER...
+2021-04-08 23:04:55.033 COMMITLEADER received from c_0000000003
+2021-04-08 23:04:55.033 Phase 3: broadcast (follower)
+2021-04-08 23:04:55.033 Wait TRANSACTION...
+
+2021-04-08 23:05:08.170 Creating new peer.
+2021-04-08 23:05:08.289 Create node on zookeeper...
+2021-04-08 23:05:08.507 Hello, I'm c_0000000005
+2021-04-08 23:05:08.622 Elect leader...
+2021-04-08 23:05:08.642 I'm a follower.
+2021-04-08 23:05:08.648 Phase 1: discovery (follower)
+2021-04-08 23:05:08.660 Send FOLLOWERINFO to c_0000000003
+2021-04-08 23:05:08.879 Wait NEWEPOCH...
+2021-04-08 23:05:09.116 NEWLEADER received from c_0000000003
+2021-04-08 23:05:09.119 Send ACKNEWLEADER to c_0000000003
+2021-04-08 23:05:09.186 Wait COMMITLEADER...
+2021-04-08 23:05:09.299 COMMITLEADER received from c_0000000003
+2021-04-08 23:05:09.299 Phase 3: broadcast (follower)
+2021-04-08 23:05:09.300 Wait TRANSACTION...
+
+2021-04-08 23:05:09.896 Creating new peer.
+2021-04-08 23:05:10.121 Create node on zookeeper...
+2021-04-08 23:05:10.202 Hello, I'm c_0000000006
+2021-04-08 23:05:10.384 Elect leader...
+2021-04-08 23:05:10.407 I'm a follower.
+2021-04-08 23:05:10.409 Phase 1: discovery (follower)
+2021-04-08 23:05:10.421 Send FOLLOWERINFO to c_0000000003
+2021-04-08 23:05:10.653 Wait NEWEPOCH...
+2021-04-08 23:05:10.969 NEWLEADER received from c_0000000003
+2021-04-08 23:05:10.972 Send ACKNEWLEADER to c_0000000003
+2021-04-08 23:05:11.013 Wait COMMITLEADER...
+2021-04-08 23:05:11.127 COMMITLEADER received from c_0000000003
+2021-04-08 23:05:11.127 Phase 3: broadcast (follower)
+2021-04-08 23:05:11.127 Wait TRANSACTION...
+\end{minted}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/experiment2}
+    \caption{Experiment 2}
+    \label{fig:experiment2}
+\end{figure}
+
+When there is already an active leader in the cluster, the other nodes switch from leader election to the broadcast phase. There is no need to elect a new leader, it is only necessary to make the new nodes synchronized with the leader before the broadcast phase.
+
+\subsection{Leader crash\label{sec:crash}}
+
+\begin{minted}{shell-session}
+2021-04-08 23:06:15.252 Leader gone.
+2021-04-08 23:06:15.255 Elect leader...
+2021-04-08 23:06:15.260 I'm the prospective leader.
+2021-04-08 23:06:15.260 Phase 1: discovery (leader)
+2021-04-08 23:06:15.260 Waiting for quorum...
+2021-04-08 23:06:15.267 Wait FOLLOWERINFO...
+2021-04-08 23:06:15.326 FOLLOWERINFO received from c_0000000006
+2021-04-08 23:06:15.328 Waiting for quorum...
+2021-04-08 23:06:15.329 Quorum ok.
+2021-04-08 23:06:15.333 Send NEWEPOCH to c_0000000006
+2021-04-08 23:06:15.343 Wait ACKEPOCH...
+2021-04-08 23:06:15.532 ACKEPOCH received from c_0000000006
+2021-04-08 23:06:15.533 Phase 2: synchronization (leader)
+2021-04-08 23:06:15.542 Send NEWLEADER to c_0000000006
+2021-04-08 23:06:15.618 Wait ACKNEWLEADER...
+2021-04-08 23:06:15.758 ACKNEWLEADER received from c_0000000006
+2021-04-08 23:06:15.759 Send COMMITLEADER to c_0000000006
+2021-04-08 23:06:15.820 Phase 3: broadcast (leader)
+2021-04-08 23:06:15.821 Wait Message...
+2021-04-08 23:06:25.309 FOLLOWERINFO received from c_0000000005
+2021-04-08 23:06:25.309 Send NEWEPOCH to c_0000000005
+2021-04-08 23:06:25.443 Send NEWLEADER to c_0000000005
+2021-04-08 23:06:25.705 ACKNEWLEADER received from c_0000000005
+2021-04-08 23:06:25.705 Send COMMITLEADER to c_0000000005
+
+2021-04-08 23:06:15.252 Leader gone.
+2021-04-08 23:06:15.257 Elect leader...
+2021-04-08 23:06:15.261 I'm a follower.
+2021-04-08 23:06:15.261 Phase 1: discovery (follower)
+2021-04-08 23:06:15.261 Send FOLLOWERINFO to c_0000000004
+2021-04-08 23:06:15.303 Wait NEWEPOCH...
+2021-04-08 23:06:15.366 NEWEPOCH received from c_0000000004
+2021-04-08 23:06:15.369 Send ACKEPOCH to c_0000000004
+2021-04-08 23:06:15.481 Phase 2: synchronization (follower)
+2021-04-08 23:06:15.482 Wait NEWLEADER...
+2021-04-08 23:06:15.642 NEWLEADER received from c_0000000004
+2021-04-08 23:06:15.642 Send ACKNEWLEADER to c_0000000004
+2021-04-08 23:06:15.722 Wait COMMITLEADER...
+2021-04-08 23:06:15.876 COMMITLEADER received from c_0000000004
+2021-04-08 23:06:15.876 Phase 3: broadcast (follower)
+2021-04-08 23:06:15.876 Wait TRANSACTION...
+
+2021-04-08 23:06:15.252 Leader gone.
+2021-04-08 23:06:15.254 Elect leader...
+2021-04-08 23:06:15.258 I'm a follower.
+2021-04-08 23:06:15.258 Phase 1: discovery (follower)
+2021-04-08 23:06:15.259 Send FOLLOWERINFO to c_0000000004
+2021-04-08 23:06:15.281 Wait NEWEPOCH...
+2021-04-08 23:06:25.259 Elect leader...
+2021-04-08 23:06:25.262 I'm a follower.
+2021-04-08 23:06:25.262 Phase 1: discovery (follower)
+2021-04-08 23:06:25.262 Send FOLLOWERINFO to c_0000000004
+2021-04-08 23:06:25.300 Wait NEWEPOCH...
+2021-04-08 23:06:25.560 NEWLEADER received from c_0000000004
+2021-04-08 23:06:25.560 Send ACKNEWLEADER to c_0000000004
+2021-04-08 23:06:25.679 Wait COMMITLEADER...
+2021-04-08 23:06:25.823 COMMITLEADER received from c_0000000004
+2021-04-08 23:06:25.823 Phase 3: broadcast (follower)
+2021-04-08 23:06:25.824 Wait TRANSACTION...
+\end{minted}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/experiment3}
+    \caption{Experiment 3}
+    \label{fig:experiment3}
+\end{figure}
+
+When the leader crashes all the phases of the protocol are executed.
+In this example the second node (c\_0000000005) conflicts with the last one (c\_0000000006), so its message is not read from the prospective leader.
+This is not a problem, because the quorum of the nodes in the cluster voted for c\_0000000004.
+After its timeout, c\_0000000006 will retry the election and it will find the new elected leader c\_0000000004.

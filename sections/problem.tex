@@ -1,0 +1,19 @@
+\chapter{Problem statement\label{sec:problem}}
+
+\section{Scope\label{sec:scope}}
+The aim of the PoC is to understand in practice how the Zab algorithm works.
+So the boundaries are set by how the algorithm is described in \cite{junqueira2011zab} and how can it be implemented in a programming language such as Java.
+The most used implementation of Zab is not exactly as described in the original paper (more details can be found in \cite{medeiros2012zookeeper}) and it is enclosed inside the ZooKeeper system.
+
+\section{Purpose\label{sec:purpose}}
+The expectations from this work are to check if Zab can be easily reproduced as described in the original paper.
+Starting from here, scientific expectation is to understand if the atomic broadcast properties can be respected.
+
+\section{Aspects to be investigated\label{sec:aspects}}
+
+Investigated aspects are:
+\begin{itemize}
+    \item how to implement a demo of how Zab should work;
+    \item try ZooKeeper platform to manage clients;
+    \item understand how Zab is implemented under the hood.
+\end{itemize}
