@@ -3,16 +3,21 @@
 \begin{document}
     \frontmatter
     \input{sections/titlepage}
-    %\input{sections/colophon}
-    %\input{sections/summary}
+    \input{sections/colophon}
     \afterpage{\null\thispagestyle{empty}\clearpage}
-    \input{sections/thanks}
+    \input{sections/abstract}
     \afterpage{\null\thispagestyle{empty}\clearpage}
-    %\input{sections/indices}
+    \input{sections/acknowledgements}
+    \afterpage{\null\thispagestyle{empty}\clearpage}
+    \input{sections/indices}
     \afterpage{\null\thispagestyle{empty}\clearpage}
     \mainmatter
+    \input{sections/problem-statement}
+    \input{sections/solution-space}
+    \input{sections/experimental-results}
+    \input{sections/conclusions-outlook}
     \backmatter
     %\input{sections/glossary}
     %\input{sections/acronyms}
-    %\input{sections/bibliography}
+    \input{sections/bibliography}
 \end{document}

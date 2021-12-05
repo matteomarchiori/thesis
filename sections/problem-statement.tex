@@ -1,0 +1,106 @@
+\chapter{Problem Statement\label{sec:problemstatement}}
+
+Scalability is a topic that all the applications used from a lot of people need to face.
+Cloud applications are designed to satisfy a high number of requests, from lots of users.
+
+We can define the scalability as the property of an architecture to adapt itself to different kinds of load, so to use the right number of resources based on the faced situation.
+
+The scalability dimensions \cite{eventuate_2021} can be divided into:
+\begin{description}
+    \item[functional decomposition]: scalability by splitting different things, from a functional point of view. It is obtained by the orchestration of components.
+    \item[horizontal replication]: scalability by cloning the same thing. It is obtained by statelessness of components.
+    \item[data partitioning]: scalability by splitting similar things. This is used with orchestration and statelessness. 
+\end{description}
+
+In order to test the scalability of an application it is possible to use load tests.
+This kind of tests are built starting from real situations, where you verify the behavior of the distributed application with the goal of understand if its architecture is designed to face the scenarios.
+Moreover, it is possible to look for its breakpoints and see how it reacts to these situations.
+
+In literature here are different examples regarding this kind of tests on distributed architectures with different goals.
+
+A first example is from Avritzer\cite{avritzer2020scalability}, where authors present an approach to compare different configurations of a microservice system to get the best among them.
+
+They use a metric called Domain-based, which is obtained using these steps:
+\begin{enumerate}
+    \item collection of operational data of the analyzed system, which are used to obtain an operative profile;
+    \item analysis of the data (probability of a specific load, groups of these probabilities and analysis of the frequencies);
+    \item generation of the experiment (determined by the group loads, the configuration of the architecture and from a baseline used to understand if the test is passed or not). From more experiments a test case is produced;
+    \item computation of the baseline used to understand how many systems have the requisites of scalability based on the test cases;
+    \item execution of the experiment (fraction of executions of the services which pass the test with the given configuration on the total of the executions);
+    \item computation of the metric multiplying the previous sum with the probability of the given load.
+\end{enumerate}
+
+The design of the metric is useful to highlight how the configuration of the system (which is how many resources are usable) has an influence on the performance obtained on the collected operational profiles.
+
+On another work from Trubiani\cite{trubiani2018exploiting} authors use a method to look for weak points on the source code of the analyzed system which can bring to worse performance.
+As on the previous case operational profiles are used to generate load tests, which in this work are used to find antipatterns.
+
+The adopted steps are the following:
+\begin{enumerate}
+    \item use of the load tests on the system;
+    \item manual analysis of performance issues;
+    \item rules development to find the antipattern;
+    \item fix of the antipattern;
+    \item repetition of the load tests with the applied fix.
+\end{enumerate}
+
+This work is interesting as the results report for the better performances obtained after the antipattern resolution.
+
+Davatz and other authors\cite{davatz2017approach} focus their attention on the cost of IAAS and on their comparison.
+Okta is the framework that they present and it evaluates the infrastructure on the number of completed requests per second (SRPS) with each configuration, by using different benchmarks.
+They derive also a metric based on the dollar value.
+The interesting point is this metric performance/cost, which is used to obtain a ranking of the IAAS providers.
+
+Another work which I have found interesting is the following one\cite{preuveneers2016systematic}. Authors of this work talks about a method to evaluate the scalability of a distributed system, by using the platform Scalar. They use a configuration file to give some feature that are transformed into code and that can be activated or deactivated.
+In order to execute the evaluation it is selected a set of features, used to run the experiments.
+
+The last example that I report is about the resilience of microservices architectures\cite{heorhiadi2016gremlin}.
+No real load is generated on the system, failures are produced on the system by using a proxy system agnostic on the used technologies, which cause configured operations on messages among the microservices.
+
+Gremlin is useful to apply Chaos engineering principles\footnote{\url{https://principlesofchaos.org}}, so to evaluate the behavior of the system under stress conditions caused by using experiments.
+
+These and other works inspired this thesis work to solve the problem of this thesis. I focus on the scalability problem on Signal, a chat application with open source code.
+
+In particular, I want to understand the behavior of the Signal architecture to steady loads and to peak loads, and build a battery of load tests which can be reused as a base to test similar architectures.
+
+I chose Signal because it is open source, so it allows to get all the information to get deep into its internal architecture. This is not a common thing among chat applications.
+
+The final goal of this thesis is to obtain some useful resources to understand the behavior under load tests of distributed applications.
+Signal is used as a case study, in particular some of its functions, but the tests are designed to be reused with similar cloud applications in order to check their behavior, with some modifications on the configurations of the tests.
+
+The reason is to understand that the theoretical scalability requirements are respected in reality. So the proposal is a set of configurable tests in this sense.
+
+Applications like Signal face a lot of traffic every day, they are used from a huge number of users.
+Moreover, the generated traffic is not linear and easy to manage.
+
+Some examples about peaks of traffic are the ones generated for work or during particular holidays.
+The best example is the one of Christmas holiday wishes, when in a short period of time a lot of traffic is generated \cite{gunawi2016does}.
+
+This means that the architecture should manage different situations of traffic, and scale up or down in the correct way based on the number of requests.
+
+In other cases the traffic generated from Signal if much lower and distributed in time, because a lower number of users chats on it.
+
+Resources that are needed to afford huge traffic cost money. This is the reason why elastic scalability systems are needed to acquire and release resources on the right time, to reduce the waste of money in the best possible manner.
+
+On the other way, it is also necessary to maintain the correct level of resources needed to afford any number of requests.
+This is done by expanding and retrieving the available resources.
+
+The scalability is that property which allows an application to face a number of requests which is not known in advance.
+This is the reason why the application should be able to receive them and give a response, also if the number of these requests increase during time.
+
+In theory the scalability can be applied to an unlimited number of requests. This is not possible in reality, because the resources of a system are always limited.
+For this reason scalability of an application is always to be considered with an upper limit.
+
+For this reason it is useful to evaluate the scalability of an application with load tests, in order to understand if its architecture respect the theoretical requisites also in the real world.
+
+On the load tests we simulate real situations' behavior, in order to understand ho the application faces it.
+
+The problem become how to design and implement a set of significant load tests, which can cover the real situations that the application can face.
+
+Starting from these characteristics we will implement the load tests which will put under load the Signal architecture.
+
+The final goal of this thesis is to analyze how the Signal server architecture \cite{read_2021,cocorada_2018} faces the elastic scalability problem.
+I start from the case study of an outage happened between the 15th and the 17th January 2021 as a reference \cite{woodard_2021,aten_2021}, by comparing the 4.97 architecture, the one in use at the time of the outage, with the 6.13 version, which is the most recent one available when I started the experiments.
+
+What we demonstrate is that the evolution of the architecture with a change on its components is good to avoid huge loads in short time periods, but it can be less suited for long term loads.
+Moreover, changes apported are useful to delegate the management of the database system and other services used by the server, so their performance must respect the ranges offered by AWS\footnote{\url{https://aws.amazon.com}}.

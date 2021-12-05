@@ -16,13 +16,14 @@
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage[autostyle,italian=guillemets]{csquotes}
-\usepackage[backref,hyperref,style=numeric,autolang=hyphen,backend=biber]{biblatex}
+\usepackage[backref,hyperref,style=numeric,sorting=none,autolang=hyphen,backend=biber]{biblatex}
 \addbibresource{bibliography.bib}
 \usepackage[eulerchapternumbers,beramono,pdfspacing, tocaligned, dottedtoc]{classicthesis}
 \usepackage{arsclassica}
 \usepackage[suftesi]{frontespizio}
 \usepackage{float}
-\usepackage{hyperref}
+\usepackage[a-1b]{pdfx}
+%\usepackage{hyperref}
 \newcommand{\mail}[1]{\href{mailto:#1}{\texttt{#1}}}
 \hypersetup{linktocpage=false,
     linktocpage=false, pdfstartpage=3, pdfstartview=FitV, pdfborder={0 0 0}}
@@ -32,9 +33,13 @@
 \usepackage{verbatim}
 \usepackage{float}
 \usepackage{booktabs}
-\usepackage{tabularx}\newcolumntype{Y}{>{\centering\arraybackslash}X}
-\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{graphicx}
+%\usepackage{tabularx}\newcolumntype{Y}{>{\centering\arraybackslash}X}
 \usepackage[english]{varioref}
 \usepackage{minted}
 \usemintedstyle{lovelace}
 %\usepackage{color,soulutf8}
+
+\newenvironment{abstract}{}{}
+\usepackage{abstract}
