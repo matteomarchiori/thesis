@@ -9,6 +9,8 @@
     numbers=noenddot,
     cleardoublepage=empty]{scrbook}
 \usepackage{lmodern}
+\usepackage{quoting}
+\quotingsetup{font=small}
 \usepackage{textcomp}
 \usepackage{lettrine}
 \usepackage{calligra}
@@ -23,10 +25,15 @@
 \usepackage[suftesi]{frontespizio}
 \usepackage{float}
 \usepackage[a-1b]{pdfx}
-%\usepackage{hyperref}
+\PassOptionsToPackage{pdfa}{hyperref}
 \newcommand{\mail}[1]{\href{mailto:#1}{\texttt{#1}}}
-\hypersetup{linktocpage=false,
-    linktocpage=false, pdfstartpage=3, pdfstartview=FitV, pdfborder={0 0 0}}
+\hypersetup{
+    linktocpage=false,
+    linktocpage=false, 
+    pdfstartpage=3, 
+    pdfstartview=FitV, 
+    pdfborder={0 0 0}
+}
 \linespread{1.5}
 %\hypersetup{hidelinks}
 \newcommand{\omissis}{[\textellipsis\unkern]}
@@ -43,3 +50,5 @@
 
 \newenvironment{abstract}{}{}
 \usepackage{abstract}
+
+\cfoot{Load testing of distributed applications: the Signal case study}

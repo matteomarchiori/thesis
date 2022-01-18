@@ -1,18 +1,25 @@
 \chapter{Conclusions and outlook\label{sec:conclusionsoutlook}}
 
-Da quanto confermano gli esperimenti\dots
+In this chapter there are some observations about the results of the performed experiments and possible outlooks starting from this work.
 
-Abbiamo visto come la scalabilità di Signal si comporta in queste situazioni...
+\section{Observations\label{sec:observations}}
 
-Quindi in definitiva si può dire che\dots
+From the performed experiments there are no evidence about overload vulnerabilities due to the implementation of the APIs.
+What can be deducted is that while the first architecture model, which uses PostgreSQL and less AWS services, reacts better to steady loads for long periods of time, also if it is less efficient compared to the newer version.
 
-Outlooks: NON SOLO SIGNAL. Dove posso usare la batteria di test creata? Per cosa?
+This is confirmed from the steady load experiments, where the 4.97 version of the server is more resilient of the newer version.
 
-Altre aree che possono essere prese in considerazione, in base anche alla letteratura.
+However, the two servers have more or less the same behavior with the peak load experiments, and the 6.13 version is more efficient if we take into consideration the CPU usage.
 
-*****************
+It is reasonable saying that the outage happened on January 2021 as described on the Signal community blog \parencite{outage} happened because of an accumulation of sessions made from the Android clients in order to retry the failed message sending, without success, and making the situation worse.
 
-The load tests are used to simulate situations which are closed to the reality, in order to understand how it behaves under an experimental load.
+The given solution was on the client side, to automatically reset the connection, so they released the resources from the server.
+
+Starting from this situation, the incremental steady load tests made on the experiments are quite similar to what happened in the reality, because in some days a huge number of people started to migrate from WhatsApp to Signal for a change in its privacy policy terms and for a tweet by Elon Musk who wrote to use it as a valid alternative\footnote{\url{https://www.bbc.com/news/technology-55684595}}.
+This is similar to the incremental steady load tests because during their execution a constantly increasing number of users start to make more and more accounts.
+Another kind of test which can be used to simulate this situation is a peak load test with more users and with a longer duration.
+
+The load tests are used to simulate situations which are close to the reality, in order to understand how it behaves under an experimental load.
 
 The problem is to understand how to implement a set of significant load tests, which should cover some real situations that the application can face.
 
@@ -20,29 +27,31 @@ To do this we designed the tests to simulate real situations but with scaled dow
 
 The different kind of performed experiments can be compared to a normal use of Signal, so a low load during a long period of time, and huge load in a short period of time, which can be compared to a real situation such as the New Year's Eve wishes.
 
-The lower load experiments with a higher duration refer to a single sequence of APIs calls to Signal, to complete an operation between an account creation and a message sending.
-This operation gets completed by a single user, for $1000$ consecutive executions (see section \vref{sec:baseloadsettings}).
-
-Instead, the higher load  experiments with a lower duration refer to a maximum of $100$ parallel users which can send single sequences of APIs calls, with a ramp-up period of $200$ seconds. This means that a thread (which correspond to a user) is launched every $2$ seconds. In these experiments the repetitions are $10$ instead of $1000$ (see section \vref{sec:highloadsettings}).
-
 As the results show both of the architectures are able to face the different loads, with some differences among the experiments.
 
 Resources that are needed to afford huge traffic cost money. This is the reason why elastic scalability systems are needed to acquire and release resources on the right time, to reduce the waste of money in the best possible manner.
 
-The experiments do not investigate on it. To do this, it is necessary to use a IAAS such as AWS is configured in a way similar to the production environment.
-This is not under public knowledge.
+In this thesis I studied the Signal architecture without taking into consideration its dynamic management of resources.
+This is because Signal does not provide such information about its configuration on the AWS IaaS platform for the production environment.
 
+What the experiments performed in the thesis confirmed is that the architectures used for the Signal server behave better in specific conditions, the 4.97 version is more suited for steady loads (see figures \vref{fig:signalbasecreateloadold} and \vref{fig:signalbasemessageloadold} compared to figures \vref{fig:signalbasecreateloadnew} and \vref{fig:signalbasemessageloadnew}), while the 6.13 version is generally more efficient (see figures \vref{fig:signalcreateloadnew} and \vref{fig:signalhighmessageloadnew} compared to figures \vref{fig:signalcreateloadold} and \vref{fig:signalmessageloadold}).
+Moreover, the new version delegates the management of components to AWS, which is good to waste less time into them.
 
+What we highlight is that the evolution of the architecture with a change on its components is good to avoid huge loads in short time periods, but it can be less suited for long term loads.
+Moreover, changes on the new server version are useful to delegate the management of the database system and other services used by the server, so their performance must respect the ranges offered by AWS.
 
-What the experiments performed in the thesis confirmed is that the architectures used for the Signal server behave better in specific conditions, the 4.97 version is more suited for long term low loads (see figures \vref{fig:signalbasecreateloadold} and \vref{fig:signalbasemessageloadold} compared to figures \vref{fig:signalbasecreateloadnew} and \vref{fig:signalbasemessageloadnew}), while the 6.13 version supports better higher loads in short times (see figures \vref{fig:signalcreateloadnew} and \vref{fig:signalhighmessageloadnew} compared to figures \vref{fig:signalcreateloadold} and \vref{fig:signalmessageloadold}).
-Moreover, the new version delegate the management of components to AWS, which is good to waste less time into them. 
-
-None of the two architecture seem to have weak points directly connected to a specific API call.
-
-What we demonstrate is that the evolution of the architecture with a change on its components is good to avoid huge loads in short time periods, but it can be less suited for long term loads.
-Moreover, changes apported are useful to delegate the management of the database system and other services used by the server, so their performance must respect the ranges offered by AWS.
+\clearpage
 
 \section{Outlook\label{sec:outlook}}
+
+This thesis has been made to provide some resources useful to load different kind of architectures of cloud applications.
+
+One possible example can be WhatsApp. It is possible to use the same experiments, with some changes on the HTTP calls, in order to get some results about it.
+It would be possible to do a comparison between it and Signal, in order to see the more resilient to steady load.
+
+This would be possible only with access to the WhatsApp architecture, which is not open source.
+
+Other outlooks with the focus of extending this work are the following.
 
 It is possible to cover also the entire architecture of Signal to test if the AWS provided services respect the agreed level of resources.
 
@@ -57,13 +66,3 @@ Another outlook is related to the kind of experiments which can be performed.
 For example, it is possible to load test the architecture in a white box way, so repeat the previous tests while Redis is running other operations, or while PostgreSQL is serving another application.
 
 It would be possible to change the characteristics of the environment where the Signal server is hosted, to check how the results change.
-
-
-
-Other possible outlooks are the following:
-\begin{itemize}
-    \item experimental analysis with more focus on each single component took by itself, with JMeter and plugins or other tools dedicated to this aim \cite{dubey_2019};
-    \item analysis of the remaining API calls, as stated before;
-    \item experiments on the AWS components, for example by using Distributed Load Testing \cite{king_dobner_2019};
-    \item more realistic application scenarios based on real data, which can be provided by asking Open Whisper Systems \cite{wikipedia_2021}.
-\end{itemize}
